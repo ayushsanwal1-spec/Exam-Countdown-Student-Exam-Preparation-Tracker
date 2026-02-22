@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Tracker</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; }
+        .container { background: white; padding: 20px; border-radius: 10px; width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
+        .exam-card { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; }
+        .days { font-weight: bold; color: #d9534f; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Exam Countdown</h2>
+    
+    <input type="text" id="subject" placeholder="Enter Subject">
+    <input type="date" id="examDate">
+    <button onclick="addExam()">Add Exam</button>
+
+    <div id="dashboard"></div>
+</div>
+
+<script>
+    function addExam() {
+        // 1. Get values from inputs
+        let sub = document.getElementById('subject').value;
+        let dateValue = document.getElementById('examDate').value;
+
+        if (sub === "" || dateValue === "") {
+            alert("Please fill both fields!");
+            return;
+        }
+
+        // 2. Calculate Days Remaining
+        let today = new Date();
+        let examDay = new Date(dateValue);
+        let timeDiff = examDay - today;
+        let daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+
+        // 3. Create the UI element (HTML string)
+        let card = `
+            <div class="exam-card">
+                <span>${sub}</span>
+                <span class="days">${daysLeft} Days Left</span>
+            </div>`;
+
+        // 4. Append to the dashboard
+        document.getElementById('dashboard').innerHTML += card;
+    }
+</script>
+
+</body>
+</html>
