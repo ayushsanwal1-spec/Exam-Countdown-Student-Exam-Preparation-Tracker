@@ -1,56 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Exam Tracker</title>
-    <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; }
-        .container { background: white; padding: 20px; border-radius: 10px; width: 350px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; cursor: pointer; }
-        .exam-card { border-bottom: 1px solid #eee; padding: 10px 0; display: flex; justify-content: space-between; }
-        .days { font-weight: bold; color: #d9534f; }
-    </style>
+<meta charset="UTF-8">
+<title>Exam Dashboard</title>
+<style>
+body{font-family:sans-serif;background:#f4f4f4;padding:20px}
+.box{max-width:700px;margin:auto;background:#fff;padding:15px;border-radius:10px}
+input,button{padding:7px;margin:4px}
+.task{border-bottom:1px solid #eee;padding:5px}
+.bar{background:#ddd;border-radius:10px;margin-top:8px}
+.fill{height:18px;background:#4caf50;width:0;color:#fff;text-align:center;border-radius:10px;font-size:12px}
+</style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Exam Countdown</h2>
-    
-    <input type="text" id="subject" placeholder="Enter Subject">
-    <input type="date" id="examDate">
-    <button onclick="addExam()">Add Exam</button>
+<div class="box">
+<h2>📚 Exam Dashboard</h2>
 
-    <div id="dashboard"></div>
+<!-- Exam -->
+<input id="ename" placeholder="Exam Name">
+<input type="date" id="edate">
+<button onclick="saveExam()">Save</button>
+<p id="exam"></p>
+<p id="cd"></p>
+
+<!-- Subject Planner -->
+<h3>Subject Planner</h3>
+<input id="sub" placeholder="Subject">
+<input id="top" placeholder="Topic">
+<button onclick="add()">Add</button>
+<div id="list"></div>
+
+<!-- Daily -->
+<h3>Daily Tasks</h3>
+<input id="daily" placeholder="Daily Task">
+<button onclick="addDaily()">Add</button>
+<div id="dlist"></div>
+
+<!-- Progress -->
+<div class="bar"><div id="p" class="fill">0%</div></div>
+
 </div>
 
 <script>
-    function addExam() {
-        // 1. Get values from inputs
-        let sub = document.getElementById('subject').value;
-        let dateValue = document.getElementById('examDate').value;
+let tasks=JSON.parse(localStorage.getItem("tasks")||"[]"),
+dailyTasks=JSON.parse(localStorage.getItem("dailyTasks")||"[]"),
+examData=JSON.parse(localStorage.getItem("exam")||"{}");
 
-        if (sub === "" || dateValue === "") {
-            alert("Please fill both fields!");
-            return;
-        }
+function save(){localStorage.setItem("tasks",JSON.stringify(tasks));
+localStorage.setItem("dailyTasks",JSON.stringify(dailyTasks));}
 
-        // 2. Calculate Days Remaining
-        let today = new Date();
-        let examDay = new Date(dateValue);
-        let timeDiff = examDay - today;
-        let daysLeft = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+function saveExam(){
+ examData={n:ename.value,d:edate.value};
+ localStorage.setItem("exam",JSON.stringify(examData));
+ showExam();
+}
 
-        // 3. Create the UI element (HTML string)
-        let card = `
-            <div class="exam-card">
-                <span>${sub}</span>
-                <span class="days">${daysLeft} Days Left</span>
-            </div>`;
+function showExam(){
+ if(!examData.d) return;
+ exam.innerHTML="Exam: "+examData.n;
+ let days=Math.ceil((new Date(examData.d)-new Date())/86400000);
+ cd.innerHTML="Days Left: "+days;
+}
 
-        // 4. Append to the dashboard
-        document.getElementById('dashboard').innerHTML += card;
-    }
+function add(){
+ if(!sub.value||!top.value) return;
+ tasks.push({s:sub.value,t:top.value,d:false});
+ sub.value="";top.value=""; save(); render();
+}
+
+function addDaily(){
+ if(!daily.value) return;
+ dailyTasks.push({t:daily.value,d:false});
+ daily.value=""; save(); render();
+}
+
+function toggle(i){tasks[i].d=!tasks[i].d; save(); render();}
+function toggleD(i){dailyTasks[i].d=!dailyTasks[i].d; save(); render();}
+
+function render(){
+ list.innerHTML=""; dlist.innerHTML="";
+ let done=0;
+
+ tasks.forEach((x,i)=>{
+  if(x.d) done++;
+  list.innerHTML+=`<div class="task">
+  <input type="checkbox" ${x.d?"checked":""} onclick="toggle(${i})">
+  ${x.s} - ${x.t}</div>`;
+ });
+
+ dailyTasks.forEach((x,i)=>{
+  dlist.innerHTML+=`<div class="task">
+  <input type="checkbox" ${x.d?"checked":""} onclick="toggleD(${i})">
+  ${x.t}</div>`;
+ });
+
+ let per=tasks.length?Math.round(done/tasks.length*100):0;
+ p.style.width=per+"%"; p.innerHTML=per+"%";
+}
+
+/* Notification reminder */
+if("Notification" in window){
+ Notification.requestPermission();
+ setInterval(()=>{
+  if(Notification.permission==="granted")
+   new Notification("Study Reminder 📚",{body:"Time to study!"});
+ },3600000);
+}
+
+render();
+showExam();
+setInterval(showExam,60000);
 </script>
 
 </body>
